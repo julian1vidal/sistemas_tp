@@ -1,0 +1,5 @@
+Al crear el array de mutexes, se les ocurre alguna razon por la que necesitariamos accederla desde un puntero?
+La tabla que nos dieron esta hecha puntero y no entendi por que.
+
+Ahora que veo la implementacion de la funcion incrementar me parece que estamos bloqueando mucho, pero puede que sea mas un tema psicologico por ver que toda la funcion esta adentro de un lock.
+No se me ocurrio otra forma para que no tengamos race conditions en caso de que se quiera agregar 2 veces la misma palabra, se me ocurre que mientras uno la busca y no la encuentra, el otro puede buscarla y no encontrarla tambien y que al final se agregue 2 veces. Para la parte de que no haya race conditions con el valor de la clave podriamos tener todas las claves con enteros atomicos (no tengo idea de si agrega mucho espacio asi que puede que sea una barbaridad).

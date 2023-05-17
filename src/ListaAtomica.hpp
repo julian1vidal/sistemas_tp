@@ -2,6 +2,7 @@
 #define LISTA_ATOMICA_HPP
 
 #include <atomic>
+#include <mutex>
 
 template<typename T>
 class ListaAtomica {
@@ -14,6 +15,7 @@ class ListaAtomica {
     };
 
     std::atomic<Nodo *> _cabeza;
+    std::mutex _lock_lista;
 
  public:
     ListaAtomica() : _cabeza(nullptr) {}
@@ -30,6 +32,15 @@ class ListaAtomica {
 
     void insertar(const T &valor) {
         // Completar (Ejercicio 1)
+        Nodo *nuevo_nodo = new Nodo(valor); //Estoy asumiendo que new no tiene problemas de concurrencia
+
+        _lock_lista.lock();
+
+        nuevo_nodo->_siguiente = _cabeza.load();
+        _cabeza.store(nuevo_nodo);
+        
+        _lock_lista.unlock();
+        // Si se nos ocurre una idea con variables atomicas podemos usar ambas y compararlas en el informe
     }
 
     T &cabeza() const {

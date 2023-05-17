@@ -1,0 +1,21 @@
+Ejercicio 1:
+
+- Implementada la funcion insertar(valor) de ListaAtomica, use un mutex pero podemos encontrar tambien una forma usando alguna otra cosa y despues compararlas en el informe.
+
+##############
+
+Ejercicio 2:
+
+En general para este ejercicio, las variables privadas nuevas estan como punteros, por alguna razon que no logre entender, en el archivo ContarPalabras.cpp, en la linea 29 se estaba quejando el compilador y decia que estaba llamando a una funcion que habia sido borrada.
+La funcion en cuestion era el constructor por copia, no logre solucionarlo sin hacer que las variables fueran punteros, si alguno tiene idea de que onda aviseme por favor.
+
+- Creado el conjunto de claves, lo hice sobre ListaAtomica para que sea atomico (si resulta que no hacia falta lo cambiamos)
+- Agregados los 26 mutex para cada bucket y el entero atomico para ir haciendo de "ticket". Cada vez que se realize una operacion del HashMap consigue el numero de operacion y luego claves puede tomar solo las claves agregadas al conjunto con un numero de operacion menor al propio (Si alguna operacion no necesita numero de operacion no se le dara ticket).
+
+- Inicializado el entero atomico en el constructor de HashMap
+
+- Implementada la funcion Incrementar(clave), me parece que bloquee mucho pero no se me ocurria que podia cambiar de forma de evitar race conditions, de todas formas me parece que el sentimiento es algo mas psicologico por ver que toda la funcion esta encerrada en el mutex de su bucket.
+
+Incrementar decide a que bucket pertenece la clave, la busca, si la encuentra le aumenta en 1 su valor, de no encontrarla la agrega a la ListaAtomica e inserta la clave al conjunto de claves con el numero de operacion.
+
+- Implementada la funcion claves(), consigue numero de operacion, recorre todo el conjunto de claves y agrega a un vector las claves que tengan un numero de operacion menor al propio, al tener un numero de operacion mas chico, en teoria deberian haber ejecutado antes, no se me ocurre alguna traza de forma que alguna ejecucion tenga un numero de operacion mas chico habiendo siendo ejecutada despues.
