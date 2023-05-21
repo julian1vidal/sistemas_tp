@@ -25,11 +25,7 @@ class HashMapConcurrente {
 
  private:
     ListaAtomica<hashMapPair> *tabla[HashMapConcurrente::cantLetras];
-    //ListaAtomica<hashMapPair> *_claves; // Use la lista atomica para que sea una estructura atomica
-    // Y porque de todas formas hay que recorrerla entera cada vez que se hace claves()
 
-    std::set<std::string> *_claves; // Use un set para que sea mas facil de insetar y devolver
-    std::atomic<unsigned int> *nro_operacion;
     std::mutex *mutexes[cantLetras];
 
     static unsigned int hashIndex(std::string clave);
