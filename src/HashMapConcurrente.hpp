@@ -4,6 +4,7 @@
 #include <atomic>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "ListaAtomica.hpp"
 
@@ -24,9 +25,9 @@ class HashMapConcurrente {
 
  private:
     ListaAtomica<hashMapPair> *tabla[HashMapConcurrente::cantLetras];
-    ListaAtomica<hashMapPair> *_claves; // Use la lista atomica para que sea una estructura atomica
+    //ListaAtomica<hashMapPair> *_claves; // Use la lista atomica para que sea una estructura atomica
     // Y porque de todas formas hay que recorrerla entera cada vez que se hace claves()
-
+    std::atomic< std::set<std::string> > *_claves; //atomic set for claves
     std::atomic<unsigned int> *nro_operacion;
     std::mutex *mutexes[cantLetras];
 

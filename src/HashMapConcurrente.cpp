@@ -11,7 +11,9 @@ HashMapConcurrente::HashMapConcurrente() {
     for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
         this->tabla[i] = new ListaAtomica<hashMapPair>();
     }
-    this->_claves = new ListaAtomica<hashMapPair>();
+    //this->_claves = new ListaAtomica<hashMapPair>();
+    //atomic set for claves
+
     (*nro_operacion).store(0);
 }
 
@@ -37,8 +39,8 @@ void HashMapConcurrente::incrementar(std::string clave) {
     }
     else {
         (*tabla)[indice].insertar({clave,1});
-        (*_claves).insertar({clave,nro_op = (*nro_operacion).fetch_add(1)}); // Alguno sabe si esta linea es atomica?
-
+        //(*_claves).insertar({clave,nro_op = (*nro_operacion).fetch_add(1)}); // Alguno sabe si esta linea es atomica?
+        (*_claves).load().insert(clave);
         //Importante que insertar en _claves vaya despues para mantener consistencia con claves()
     }
 
@@ -46,17 +48,26 @@ void HashMapConcurrente::incrementar(std::string clave) {
 }
 
 std::vector<std::string> HashMapConcurrente::claves() {
-    // Completar (Ejercicio 2)
-    std::vector<std::string> res;
+    // // Completar (Ejercicio 2)
+    // std::vector<std::string> res;
 
-    unsigned int nro_op = (*nro_operacion).fetch_add(1);
-    ListaAtomica<hashMapPair>::Iterador it = (*_claves).crearIt();
+    // unsigned int nro_op = (*nro_operacion).fetch_add(1);
+    // ListaAtomica<hashMapPair>::Iterador it = (*_claves).crearIt();
 
-    while(it.haySiguiente()) {
-        if (it.siguiente().second<nro_op) {
-            res.push_back(it.siguiente().first);
-        }
-    }
+    // while(it.haySiguiente()) {
+    //     if (it.siguiente().second<nro_op) {
+    //         res.push_back(it.siguiente().first);
+    //     }
+    // }
+
+    // return res;
+
+    std:: set<std::string> claves = (*_claves).load();
+    // Crear un std::vector vacío con el tamaño adecuado
+    std::vector<std::string> res(claves.size());
+
+    // Copiar los elementos del std::set al std::vector
+    std::copy(claves.begin(), claves.end(), res.begin());
 
     return res;
 }
