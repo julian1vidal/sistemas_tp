@@ -4,6 +4,17 @@
 #include "../src/ListaAtomica.hpp"
 #include "../src/HashMapConcurrente.hpp"
 #include "../src/CargarArchivos.hpp"
+#include <thread>
+
+using namespace std;
+
+ListaAtomica<int> lista;
+
+void insertarListaAtomica(int cantidad){
+    for (int i = 0 ; i<cantidad ; i++){
+        lista.insertar(i);
+    }
+}
 
 // Tests Ejercicio 1
 
@@ -46,7 +57,33 @@ LT_BEGIN_TEST(TestsEjercicio1, InsertarAgregaEnOrden)
     LT_CHECK_EQ(l.iesimo(3), 4);
 LT_END_TEST(InsertarAgregaEnOrden)
 
-// Tests Ejercicio 2
+LT_BEGIN_SUITE(ConcurrenciaEjercicio1)
+
+void set_up()
+{
+}
+
+void tear_down()
+{
+}
+
+LT_END_SUITE(ConcurrenciaEjercicio1)
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio1, InsertarSinRaceCondition)
+
+thread t1 = thread(insertarListaAtomica,100000);
+thread t2 = thread(insertarListaAtomica,100000);
+
+t1.join();
+t2.join();
+
+LT_CHECK_EQ(lista.longitud(),200000);
+
+LT_END_TEST(InsertarSinRaceCondition)
+
+    
+
+// Tests Ejercicio 2*/
 
 LT_BEGIN_SUITE(TestsEjercicio2)
 
@@ -149,6 +186,7 @@ void tear_down()
 LT_END_SUITE(TestsEjercicio3)
 
 LT_BEGIN_TEST(TestsEjercicio3, MaximoEsCorrecto)
+
     hM.incrementar("tiranosaurio");
     hM.incrementar("tiranosaurio");
     hM.incrementar("tiranosaurio");
@@ -157,6 +195,7 @@ LT_BEGIN_TEST(TestsEjercicio3, MaximoEsCorrecto)
     hM.incrementar("estegosaurio");
 
     hashMapPair actual = hM.maximo();
+
     LT_CHECK_EQ(actual.first, "tiranosaurio");
     LT_CHECK_EQ(actual.second, 4);
 LT_END_TEST(MaximoEsCorrecto)

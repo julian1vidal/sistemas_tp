@@ -10,6 +10,9 @@
 HashMapConcurrente::HashMapConcurrente() {
     for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
         this->tabla[i] = new ListaAtomica<hashMapPair>();
+        //this->mutexes[i] = new std::mutex;
+        sem_t *aux = &mutexes[i];
+        sem_init(aux,0,1);
     }
 }
 
@@ -21,9 +24,11 @@ void HashMapConcurrente::incrementar(std::string clave) {
     // Completar (Ejercicio 2)
     unsigned int indice = hashIndex(clave);
 
-    (*mutexes)[indice].lock();
+    sem_wait(&mutexes[indice]);
 
     ListaAtomica<hashMapPair>::Iterador it = (*tabla)[indice].crearIt();
+
+    int i = 0;
     while(it.haySiguiente() && it.siguiente().first!=clave) {
         it.avanzar();
     }
@@ -35,7 +40,7 @@ void HashMapConcurrente::incrementar(std::string clave) {
         (*tabla)[indice].insertar({clave,1});
     }
 
-    (*mutexes)[indice].unlock();
+    sem_post(&mutexes[indice]);
 }
 
 std::vector<std::string> HashMapConcurrente::claves() {
@@ -47,6 +52,7 @@ std::vector<std::string> HashMapConcurrente::claves() {
 
         while (it.haySiguiente()){
             res.push_back(it.siguiente().first);
+            it.avanzar();
         }
     }
     // Va a devolver al menos las claves que existian cuando se llamo la funcion.
@@ -63,6 +69,7 @@ unsigned int HashMapConcurrente::valor(std::string clave) {
         if (it.siguiente().first == clave){
             return it.siguiente().second;
         }
+        it.avanzar();
     }
     // No estamos teniendo en cuenta el caso de si se agrega la clave durante la busqueda
     // Pero entendimos que no hacia falta.
@@ -74,22 +81,18 @@ hashMapPair HashMapConcurrente::maximo() {
     hashMapPair *max = new hashMapPair();
     max->second = 0;
 
-    for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
-        (*mutexes)[i].lock();
-        for (
-            ListaAtomica<hashMapPair>::Iterador it = tabla[i]->crearIt();
-            it.haySiguiente();
-            it.avanzar()
-        ) {
-            if (it.siguiente().second > max->second) {
+    for (unsigned int index = 0; index < HashMapConcurrente::cantLetras; index++) {
+
+        ListaAtomica<hashMapPair>::Iterador it = (*tabla)[index].crearIt();
+
+        while (it.haySiguiente()){
+
+            if (it.siguiente().second > max->second){
                 max->first = it.siguiente().first;
                 max->second = it.siguiente().second;
             }
+            it.avanzar();
         }
-    }
-
-    for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
-        (*mutexes)[i].unlock();
     }
 
     return *max;
@@ -97,6 +100,12 @@ hashMapPair HashMapConcurrente::maximo() {
 
 hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cantThreads) {
     // Completar (Ejercicio 3)
+}
+
+void HashMapConcurrente::imprimirPorBucket(){
+    for (int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
+        std::cout << (*tabla)[i].longitud() << std::endl;
+    }
 }
 
 #endif

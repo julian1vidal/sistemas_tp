@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <semaphore.h>
 
 #include "ListaAtomica.hpp"
 
@@ -23,10 +24,13 @@ class HashMapConcurrente {
     hashMapPair maximo();
     hashMapPair maximoParalelo(unsigned int cantThreads);
 
+    void imprimirPorBucket();
+
  private:
     ListaAtomica<hashMapPair> *tabla[HashMapConcurrente::cantLetras];
 
-    std::mutex *mutexes[cantLetras];
+    //std::mutex (*mutexes)[HashMapConcurrente::cantLetras];
+    sem_t mutexes[HashMapConcurrente::cantLetras];
 
     static unsigned int hashIndex(std::string clave);
 };
