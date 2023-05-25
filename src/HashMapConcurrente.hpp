@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <semaphore.h>
+#include <thread>
 
 #include "ListaAtomica.hpp"
 
@@ -24,15 +25,17 @@ class HashMapConcurrente {
     hashMapPair maximo();
     hashMapPair maximoParalelo(unsigned int cantThreads);
 
-    void imprimirPorBucket();
+    void imprimirPorBucket(); // Funcion que agregue por motivos de debugging
 
  private:
     ListaAtomica<hashMapPair> *tabla[HashMapConcurrente::cantLetras];
 
     //std::mutex (*mutexes)[HashMapConcurrente::cantLetras];
-    sem_t mutexes[HashMapConcurrente::cantLetras];
+    sem_t mutexes[HashMapConcurrente::cantLetras]; // Use semaforos porque no me salia usar mutex con c++
 
     static unsigned int hashIndex(std::string clave);
+    std::atomic<unsigned int> thread_index; // Para maximo concurrente
+    void buscarMaximo(unsigned int id, std::vector<hashMapPair>* res);
 };
 
 #endif  /* HMC_HPP */
