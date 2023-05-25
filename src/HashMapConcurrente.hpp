@@ -24,6 +24,7 @@ class HashMapConcurrente {
 
     hashMapPair maximo();
     hashMapPair maximoParalelo(unsigned int cantThreads);
+    std::vector<bool> semaforoOcupado;
 
     void imprimirPorBucket(); // Funcion que agregue por motivos de debugging
 

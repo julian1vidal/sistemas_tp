@@ -15,6 +15,7 @@ HashMapConcurrente::HashMapConcurrente() {
         // Si llegara a no estar siendo concurrente, sospecho que parte del problema podria ser como los inicializamos
         sem_t *aux = &mutexes[i];
         sem_init(aux,0,1);
+        semaforoOcupado.push_back(false);
     }
     this->thread_index = new std::atomic<unsigned int>();
     thread_index->store(0);
@@ -29,6 +30,7 @@ void HashMapConcurrente::incrementar(std::string clave) {
     unsigned int indice = hashIndex(clave);
 
     sem_wait(&mutexes[indice]);
+    semaforoOcupado[indice] = true;
 
     ListaAtomica<hashMapPair>::Iterador it = (*tabla)[indice].crearIt();
 
@@ -42,8 +44,9 @@ void HashMapConcurrente::incrementar(std::string clave) {
     else {
         (*tabla)[indice].insertar({clave,1});
     }
-
+    semaforoOcupado[indice] = false;
     sem_post(&mutexes[indice]);
+
 }
 
 std::vector<std::string> HashMapConcurrente::claves() {
@@ -97,6 +100,7 @@ hashMapPair HashMapConcurrente::maximo() {
 
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
         sem_wait(&mutexes[i]);
+        semaforoOcupado[i] = true;
     }
     // Estamos pidiendo todos a la vez y recien vamos a considerar que maximo comenzo cuando los haya
     // terminado de pedir a todos
@@ -117,7 +121,7 @@ hashMapPair HashMapConcurrente::maximo() {
             }
             it.avanzar();
         }
-        
+        semaforoOcupado[i] = false;
         sem_post(&mutexes[i]);
         // Puede pasar que justo un maximo se quede con el semaforo cuando este lo libere y tenga que esperar
         // A que este maximo termine de ejecutar (efectivamente funcionando como si no liberaramos nada)
@@ -146,6 +150,7 @@ void HashMapConcurrente::buscarMaximo(unsigned int id, std::vector<hashMapPair>*
         }
 
         (*res)[bucket] = *parcial;
+        semaforoOcupado[bucket] = false;
         sem_post(&mutexes[bucket]);
         // Lo libero aca para que los demas no tengan que esperar a que barramos toda la tabla
     }
@@ -163,6 +168,7 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cantThreads) {
     
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
         sem_wait(&mutexes[i]);
+        semaforoOcupado[i] = true;
     }
     // Los van devolviendo los threads para no tener que esperar a que esta funcion haga join
 
