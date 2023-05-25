@@ -16,7 +16,8 @@ HashMapConcurrente::HashMapConcurrente() {
         sem_t *aux = &mutexes[i];
         sem_init(aux,0,1);
     }
-    this->thread_index.store(0);
+    this->thread_index = new std::atomic<unsigned int>();
+    thread_index->store(0);
 }
 
 unsigned int HashMapConcurrente::hashIndex(std::string clave) {
@@ -131,7 +132,7 @@ void HashMapConcurrente::buscarMaximo(unsigned int id, std::vector<hashMapPair>*
     hashMapPair *parcial = new hashMapPair();
     parcial->second = 0;
 
-    while ((bucket = thread_index.fetch_add(1))<HashMapConcurrente::cantLetras){ // Confirmar que esto sea atomico
+    while ((bucket = thread_index->fetch_add(1))<HashMapConcurrente::cantLetras){ // Confirmar que esto sea atomico
         ListaAtomica<hashMapPair>::Iterador it = (*tabla)[bucket].crearIt();
 
         while (it.haySiguiente()){
@@ -165,7 +166,7 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cantThreads) {
     }
     // Los van devolviendo los threads para no tener que esperar a que esta funcion haga join
 
-    thread_index.store(0); // Importante que vaya antes de pedir los semaforos porque la comparte con otras
+    thread_index->store(0); // Importante que vaya antes de pedir los semaforos porque la comparte con otras
     // ejecuciones de maximoParalelo. No estoy permitiendo que pueda haber multiples maximos paralelos corriendo
     // concurrentemente (si pueden ir pidiendo los mutex y "reservar" su turno)
     // Choca tambien con maximo comun

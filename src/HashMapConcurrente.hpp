@@ -34,7 +34,7 @@ class HashMapConcurrente {
     sem_t mutexes[HashMapConcurrente::cantLetras]; // Use semaforos porque no me salia usar mutex con c++
 
     static unsigned int hashIndex(std::string clave);
-    std::atomic<unsigned int> thread_index; // Para maximo concurrente
+    std::atomic<unsigned int> *thread_index; // Para maximo concurrente
     void buscarMaximo(unsigned int id, std::vector<hashMapPair>* res);
 };
 
