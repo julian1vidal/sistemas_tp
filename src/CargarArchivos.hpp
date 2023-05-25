@@ -19,4 +19,11 @@ void cargarMultiplesArchivos(
     std::vector<std::string> filePaths
 );
 
+// Funcion auxiliar usada por cargarMultiplesArchivos
+int cargarArchivoParalelo(
+    std::atomic<unsigned int> *thread_index,
+    std::vector<std::string> *filePaths,
+    HashMapConcurrente *hashMap
+);
+
 #endif /* HMC_ARCHIVOS_HPP */
