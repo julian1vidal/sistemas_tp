@@ -21,6 +21,13 @@ HashMapConcurrente::HashMapConcurrente() {
     thread_index->store(0);
 }
 
+HashMapConcurrente::~HashMapConcurrente() {
+    for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
+        delete this->tabla[i];
+    }
+    delete this->thread_index;
+}
+
 unsigned int HashMapConcurrente::hashIndex(std::string clave) {
     return (unsigned int)(clave[0] - 'a');
 }
@@ -95,8 +102,8 @@ unsigned int HashMapConcurrente::valor(std::string clave) {
 }
 
 hashMapPair HashMapConcurrente::maximo() {
-    hashMapPair *max = new hashMapPair(); // Esto viene de los profesores
-    max->second = 0;
+    hashMapPair max = hashMapPair(); // Esto viene de los profesores
+    max.second = 0;
 
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
         sem_wait(&mutexes[i]);
@@ -115,9 +122,9 @@ hashMapPair HashMapConcurrente::maximo() {
 
         while (it.haySiguiente()){
 
-            if (it.siguiente().second > max->second){
-                max->first = it.siguiente().first;
-                max->second = it.siguiente().second;
+            if (it.siguiente().second > max.second){
+                max.first = it.siguiente().first;
+                max.second = it.siguiente().second;
             }
             it.avanzar();
         }
@@ -128,28 +135,28 @@ hashMapPair HashMapConcurrente::maximo() {
         // Por el momento lo considero reglas del juego pero diria que es lo menos eficiente que tiene nuestro tp
     }
 
-    return *max;
+    return max;
 }
 
 void HashMapConcurrente::buscarMaximo(unsigned int id, std::vector<hashMapPair>* res){
     unsigned int bucket;
-    hashMapPair *parcial = new hashMapPair();
-    parcial->second = 0;
+    hashMapPair parcial = hashMapPair();
+    parcial.second = 0;
 
     while ((bucket = thread_index->fetch_add(1))<HashMapConcurrente::cantLetras){ // Confirmar que esto sea atomico
         ListaAtomica<hashMapPair>::Iterador it = (*tabla)[bucket].crearIt();
 
         while (it.haySiguiente()){
 
-            if (it.siguiente().second > parcial->second){
+            if (it.siguiente().second > parcial.second){
 
-                parcial->first = it.siguiente().first;
-                parcial->second = it.siguiente().second;
+                parcial.first = it.siguiente().first;
+                parcial.second = it.siguiente().second;
             }
             it.avanzar();
         }
 
-        (*res)[bucket] = *parcial;
+        (*res)[bucket] = parcial;
         semaforoOcupado[bucket] = false;
         sem_post(&mutexes[bucket]);
         // Lo libero aca para que los demas no tengan que esperar a que barramos toda la tabla

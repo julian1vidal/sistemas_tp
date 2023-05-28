@@ -84,10 +84,9 @@ string result_to_string(bool result) {
 }
 
 int main(){
-    cout << "testMaximosSecuencial: Corriendo\n"
-        << result_to_string(testMaximosSecuencial()) << endl;
     cout << "testMaximoThreads: Corriendo\n" << endl;
     testMaximoThreads();
-    
+    cout << "testMaximosSecuencial: Corriendo\n"
+        << result_to_string(testMaximosSecuencial()) << endl;
     
 }

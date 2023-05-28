@@ -17,6 +17,7 @@ class HashMapConcurrente {
     static const unsigned int cantLetras = 26;
 
     HashMapConcurrente();
+    ~HashMapConcurrente();
 
     void incrementar(std::string clave);
     std::vector<std::string> claves();

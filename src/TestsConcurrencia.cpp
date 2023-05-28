@@ -23,6 +23,7 @@ bool testIncrementar() {
     t2.join();
 
     unsigned int resultado = (*miHashMap).valor("ejemplo");
+    delete miHashMap;
     return resultado == 20000;
 }
 
@@ -36,6 +37,8 @@ bool testIncrementarDiferentesPalabras(){
 
     unsigned int resultado1 = (*miHashMap).valor("ejemplo");
     unsigned int resultado2 = (*miHashMap).valor("otroEjemplo");
+
+    delete miHashMap;
     return resultado1 == 10000 && resultado2 == 10000;
 }
 
@@ -80,7 +83,7 @@ bool testMaximoConcurrencia(){
     t5.join();
     resultado = (*miHashMap).maximo();
     bool despues = resultado.first == "river" && resultado.second == 504;
-
+    delete miHashMap;
     return antes && despues;
 }
 

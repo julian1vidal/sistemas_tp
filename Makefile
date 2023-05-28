@@ -8,7 +8,7 @@ TARGET = ContarPalabras
 TEST_TARGET = UnitTests
 TEST_CONC = TestsConcurrencia
 TEST_JULI = TestsJuli
-
+TEST_TIEMPO = TestDeTiempo
 OBJECTS = HashMapConcurrente.o CargarArchivos.o
 
 all: build $(BUILD_DIR)/$(TARGET)
@@ -21,6 +21,10 @@ test_concurrencia: build $(BUILD_DIR)/$(TEST_CONC)
 
 test_juli: build $(BUILD_DIR)/$(TEST_JULI)
 	$(BUILD_DIR)/$(TEST_JULI)
+
+test_tiempo: build $(BUILD_DIR)/$(TEST_TIEMPO)
+	$(BUILD_DIR)/$(TEST_TIEMPO)
+
 
 $(BUILD_DIR)/%.o: src/%.cpp
 	@mkdir -p $(@D)
