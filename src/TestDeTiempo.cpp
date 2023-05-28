@@ -53,7 +53,7 @@ void maximoParaleloContraMaximoTodasLasLetras(int cantidad){
     hashMapPair maximo2 = (*miHashMap).maximo();
     end = std::chrono::high_resolution_clock::now();
     std::cout << "Tiempo maximo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
-    
+    delete miHashMap;
 }
 
 void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
@@ -70,10 +70,12 @@ void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
     hashMapPair maximo2 = (*miHashMap).maximo();
     end = std::chrono::high_resolution_clock::now();
     std::cout << "Tiempo maximo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
-    
+    delete miHashMap;
 }
 
 int main() {
-    maximoParaleloContraMaximoUnaLetra(256*2*2*2*2*2, 'z');
+    maximoParaleloContraMaximoUnaLetra(256, 'z');
+    maximoParaleloContraMaximoTodasLasLetras(256);
+    return 0;
     
 }
