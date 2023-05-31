@@ -43,15 +43,12 @@ class ListaAtomica {
         
         _lock_lista.unlock();
         }*/
-
-        { // FORMA 2 (COMPARE EXCHANGE)
         nuevo_nodo->_siguiente = _cabeza.load();
         while(!_cabeza.compare_exchange_weak(nuevo_nodo->_siguiente, nuevo_nodo));
-
+        
         // https://stackoverflow.com/questions/4944771/stdatomic-compare-exchange-weak-vs-compare-exchange-strong
 
         // https://blog.devgenius.io/a-simple-guide-to-atomics-in-c-670fc4842c8b
-        }
     }
 
     T &cabeza() const {
