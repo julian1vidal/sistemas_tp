@@ -74,8 +74,8 @@ void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
 }
 
 int main() {
-    maximoParaleloContraMaximoUnaLetra(256, 'z');
-    maximoParaleloContraMaximoTodasLasLetras(256);
+    maximoParaleloContraMaximoUnaLetra(500, 'z');
+    maximoParaleloContraMaximoTodasLasLetras(500);
     return 0;
     
 }

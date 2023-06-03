@@ -52,10 +52,14 @@ void incrementarFork(int threadId, int cantidad, std::string palabra, HashMapCon
         for (int i = 0; i < cantidad; i++) {
             (*miHashMap).incrementar(palabra);
         }
+        std::cout << "Sali" << std::endl;
         exit(0);
     }
     else{
-        while (!(*miHashMap).semaforoOcupado[5]){}
+        while (!(*miHashMap).semaforoOcupado[5]){
+            std::cout << "iterando" << std::endl;
+        }
+        std::cout << "Entre y me duermo" << std::endl;
         kill(pid, SIGSTOP);
         sleep(5);
         kill(pid, SIGCONT);
