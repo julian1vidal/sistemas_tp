@@ -112,7 +112,7 @@ unsigned int HashMapConcurrente::hashIndex(std::string clave) {
 // VERSIONES FUNCIONES NUEVAS
 
 
-void HashMapConcurrente::incrementar(std::string clave) {
+void HashMapConcurrente::incrementarLocks(std::string clave) {
     unsigned int indice = hashIndex(clave);
 
     int success;
@@ -148,7 +148,7 @@ void HashMapConcurrente::incrementar(std::string clave) {
 }
 
 // Usando nro_operacion
-void HashMapConcurrente::incrementar2(std::string clave) {
+void HashMapConcurrente::incrementar(std::string clave) {
     unsigned int indice = hashIndex(clave);
 
     int success;
@@ -185,7 +185,7 @@ void HashMapConcurrente::incrementar2(std::string clave) {
 
 }
 
-std::vector<std::string> HashMapConcurrente::claves() {
+std::vector<std::string> HashMapConcurrente::clavesLocks() {
     std::vector<std::string> res;
 
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
@@ -205,10 +205,11 @@ std::vector<std::string> HashMapConcurrente::claves() {
     return res;
 }
 
-std::vector<std::string> HashMapConcurrente::claves2() {
+std::vector<std::string> HashMapConcurrente::claves() {
     std::vector<std::string> res;
     sem_wait(&mute_nro_op);
-    unsigned int op = nro_operacion++;
+    nro_operacion++;
+    unsigned int op = nro_operacion;
     sem_post(&mute_nro_op);
 
     // Me pregunto si esto puede tener race conditions, como que se saltee elementos o algo asi
@@ -242,7 +243,7 @@ unsigned int HashMapConcurrente::valor(std::string clave) {
 }
 
 // Bloqueamos el bucket al inicio de todo
-unsigned int HashMapConcurrente::valor2(std::string clave) {
+unsigned int HashMapConcurrente::valorInicio(std::string clave) {
     unsigned int index = hashIndex(clave);
 
     sem_wait(&muteVal[index]);
@@ -250,6 +251,7 @@ unsigned int HashMapConcurrente::valor2(std::string clave) {
 
     while(it.haySiguiente()){
         if (it.siguiente().first == clave){
+            sem_post(&muteVal[index]);
             return it.siguiente().second;
         }
         it.avanzar();
@@ -378,7 +380,7 @@ void HashMapConcurrente::imprimirPorBucket(){
 // SECCION TESTS
 
 
-std::vector<std::string> HashMapConcurrente::clavesTestConLocks(std::vector<std::string> *res, bool *flag){
+std::vector<std::string> HashMapConcurrente::clavesLocksTestConLocks(std::vector<std::string> *res, bool *flag){
     std::vector<std::string> aux;
 
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
@@ -395,15 +397,19 @@ std::vector<std::string> HashMapConcurrente::clavesTestConLocks(std::vector<std:
             aux.push_back(it.siguiente().first);
             it.avanzar();
         }
-        sem_post(&muteCla[i]);
+        if (i==25){
+            *flag = !sem_post(&muteCla[i]);
+        }
+        else{
+            sem_post(&muteCla[i]);    
+        }
     }
 
-    *flag = true;
     *res = aux;
     return aux;
 }
 
-std::vector<std::string> HashMapConcurrente::clavesTestSinLocks(std::vector<std::string> *res, bool *flag){
+std::vector<std::string> HashMapConcurrente::clavesLocksTestSinLocks(std::vector<std::string> *res, bool *flag){
     std::vector<std::string> aux;
 
     *flag = false;
@@ -423,7 +429,7 @@ std::vector<std::string> HashMapConcurrente::clavesTestSinLocks(std::vector<std:
     return aux;
 }
 
-std::vector<std::string> HashMapConcurrente::clavesTest2(std::vector<std::string> *res, bool *flag){
+std::vector<std::string> HashMapConcurrente::clavesTest(std::vector<std::string> *res, bool *flag){
 
     std::vector<std::string> aux;
     sem_wait(&mute_nro_op);
@@ -487,11 +493,12 @@ unsigned int HashMapConcurrente::valorTest(std::string clave, unsigned int *res,
     return 0;
 }
 
-unsigned int HashMapConcurrente::valorTest2(std::string clave, unsigned int *res, bool *flag){
+unsigned int HashMapConcurrente::valorInicioTest(std::string clave, unsigned int *res, bool *flag){
     unsigned int index = hashIndex(clave);
 
     sem_wait(&muteVal[index]);
     *flag = false;
+    sleep(1);
     ListaAtomica<hashMapPair>::Iterador it = tabla[index]->crearIt();
 
     while(it.haySiguiente()){
@@ -503,16 +510,15 @@ unsigned int HashMapConcurrente::valorTest2(std::string clave, unsigned int *res
         }
         it.avanzar();
     }
-    sem_post(&muteVal[index]);
-    *flag = true;
+    *flag = !sem_post(&muteVal[index]);
 
     *res = 0;
 
     return 0;
 }
 
-hashMapPair HashMapConcurrente::maximoTest(bool *flag){
-    hashMapPair max = hashMapPair(); // Esto viene de los profesores
+hashMapPair HashMapConcurrente::maximoTest(hashMapPair *res, bool *flag){
+    hashMapPair max = hashMapPair();
     max.second = 0;
     for (unsigned int i = 0 ; i<HashMapConcurrente::cantLetras ; i++){
         sem_wait(&muteMax[i]);
@@ -532,14 +538,58 @@ hashMapPair HashMapConcurrente::maximoTest(bool *flag){
             it.avanzar();
         }
         semaforoOcupado[i] = false;
-        sem_post(&muteMax[i]);
+        if (i==25){
+            *flag = !sem_post(&muteMax[i]); // Para hacerlo lo mas instantaneo posible
+            // Dependiendo de como funciona c++, puede que haya una minuscula ventana donde
+            // puedan bloquearme justo despues de levantar el semaforo pero antes de la asignacion
+            // que al hilo corran los incrementar del main mientras estoy bloqueado
+            // y que la comparacion del flag me de mal
+        }
+        else{
+            sem_post(&muteMax[i]);
+        }
     }
 
-    *flag = true;
+    *res = max;
+
     return max;
 }
 
-hashMapPair HashMapConcurrente::maximoParaleloTest(unsigned int cantThreads, bool *flag){
+void HashMapConcurrente::buscarMaximoTest(unsigned int id, std::vector<hashMapPair>* res, bool *flag){
+    unsigned int bucket;
+    hashMapPair parcial = hashMapPair();
+    parcial.second = 0;
+
+    while ((bucket = thread_index->fetch_add(1))<HashMapConcurrente::cantLetras){ // Confirmar que esto sea atomico
+        if (bucket==1){
+            sleep(2);
+        }
+        
+        ListaAtomica<hashMapPair>::Iterador it = tabla[bucket]->crearIt();
+
+        while (it.haySiguiente()){
+
+            if (it.siguiente().second > parcial.second){
+
+                parcial.first = it.siguiente().first;
+                parcial.second = it.siguiente().second;
+            }
+            it.avanzar();
+        }
+
+        (*res)[bucket] = parcial;
+        semaforoOcupado[bucket] = false;
+        if (bucket==1){ // El de la "b" esta siendo artificialmente forzado a ser el ultimo
+            *flag = !sem_post(&muteMax[bucket]);
+        }
+        else{
+            sem_post(&muteMax[bucket]);
+        }
+        // Lo libero aca para que los demas no tengan que esperar a que barramos toda la tabla
+    }
+}
+
+hashMapPair HashMapConcurrente::maximoParaleloTest(hashMapPair *refRes, unsigned int cantThreads, bool *flag){
     if (cantThreads<=1){
         return HashMapConcurrente::maximo();
     }
@@ -564,7 +614,7 @@ hashMapPair HashMapConcurrente::maximoParaleloTest(unsigned int cantThreads, boo
     std::vector<hashMapPair> res(HashMapConcurrente::cantLetras);
 
     for (unsigned int i = 0 ; i<cThreads ; i++){
-        threads[i] = std::thread(&HashMapConcurrente::buscarMaximo, this, i, &res);
+        threads[i] = std::thread(&HashMapConcurrente::buscarMaximoTest, this, i, &res, flag);
     }
     
     for (unsigned int i = 0 ; i< cThreads ; i++){
@@ -579,8 +629,8 @@ hashMapPair HashMapConcurrente::maximoParaleloTest(unsigned int cantThreads, boo
             max_index = i;
         }
     }
-
-    *flag = true;
+    sleep(1);
+    *refRes = res[max_index];
 
     return res[max_index];
 }

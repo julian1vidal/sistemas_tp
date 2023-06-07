@@ -21,12 +21,12 @@ class HashMapConcurrente {
     HashMapConcurrente();
     ~HashMapConcurrente();
 
+    void incrementarLocks(std::string clave);
     void incrementar(std::string clave);
-    void incrementar2(std::string clave);
+    std::vector<std::string> clavesLocks();
     std::vector<std::string> claves();
-    std::vector<std::string> claves2();
     unsigned int valor(std::string clave);
-    unsigned int valor2(std::string clave);
+    unsigned int valorInicio(std::string clave);
 
     hashMapPair maximo();
     hashMapPair maximoParalelo(unsigned int cantThreads);
@@ -35,13 +35,14 @@ class HashMapConcurrente {
 
     // Seccion tests
 
-    std::vector<std::string> clavesTestConLocks(std::vector<std::string> *res, bool *flag);
-    std::vector<std::string> clavesTestSinLocks(std::vector<std::string> *res, bool *flag);
-    std::vector<std::string> clavesTest2(std::vector<std::string> *res, bool *flag);
+    std::vector<std::string> clavesLocksTestConLocks(std::vector<std::string> *res, bool *flag);
+    std::vector<std::string> clavesLocksTestSinLocks(std::vector<std::string> *res, bool *flag);
+    std::vector<std::string> clavesTest(std::vector<std::string> *res, bool *flag);
     unsigned int valorTest(std::string clave, unsigned int *res, bool *flag, bool naptime);
-    unsigned int valorTest2(std::string clave, unsigned int *res, bool *flag);
-    hashMapPair maximoTest(bool *flag);
-    hashMapPair maximoParaleloTest(unsigned int cantThreads, bool *flag);
+    unsigned int valorInicioTest(std::string clave, unsigned int *res, bool *flag);
+    hashMapPair maximoTest(hashMapPair *res, bool *flag);
+    void buscarMaximoTest(unsigned int id, std::vector<hashMapPair> *res, bool *flag);
+    hashMapPair maximoParaleloTest(hashMapPair *res, unsigned int cantThreads, bool *flag);
 
     std::vector<bool> semaforoOcupado;
 

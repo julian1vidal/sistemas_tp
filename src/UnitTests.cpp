@@ -16,7 +16,36 @@ void insertarListaAtomica(int cantidad){
     }
 }
 
-// Tests Ejercicio 1
+/* -
+   -
+   Orden de los tests:
+    - Tests catedra listas
+
+    - Insertar sin race condition
+
+    - Valor        bloquea a incrementarLocks
+    - ValorInicio  bloquea a incrementarLocks
+    - ClavesLocks       bloquea a incrementarLocks
+    - ClavesLocks  sin locks tiene race conditions
+    - Maximo       bloquea a incrementarLocks
+    - Maximo Paralelo bloquea a incrementarLocks
+    - Claves no bloquea a incrementar
+    
+    - Valor       y Maximo no se bloquean
+    - ValorInicio y Maximo no se bloquean
+    - Valor       y Maximo Paralelo no se bloquean
+    - ValorInicio y Maximo Paralelo no se bloquean
+    - Valor       y ClavesLocks no se bloquean
+    - ValorInicio y ClavesLocks no se bloquean
+    - ClavesLocks      y Maximo no se bloquean
+    - ClavesLocks      y Maximo Paralelo no se bloquean
+    - Maximo Paralelo 1 thread
+
+    - Tests catedra ejercicio 2, 3 y 4
+
+*/
+
+// TESTS CATEDRA EJERCICIO 1
 
 LT_BEGIN_SUITE(TestsEjercicio1)
 
@@ -57,6 +86,12 @@ LT_BEGIN_TEST(TestsEjercicio1, InsertarAgregaEnOrden)
     LT_CHECK_EQ(l.iesimo(3), 4);
 LT_END_TEST(InsertarAgregaEnOrden)
 
+
+
+
+
+// TESTS PROPIOS EJERCICIO 1
+
 LT_BEGIN_SUITE(ConcurrenciaEjercicio1)
 
 void set_up()
@@ -81,6 +116,9 @@ LT_CHECK_EQ(lista.longitud(),200000);
 
 LT_END_TEST(InsertarSinRaceCondition)
 
+
+// TESTS PROPIOS EJERCICIO 2
+
 LT_BEGIN_SUITE(ConcurrenciaEjercicio2)
 
 void set_up()
@@ -93,286 +131,713 @@ void tear_down()
 
 LT_END_SUITE(ConcurrenciaEjercicio2)
 
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesBloqueaIncrementar)
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorBloqueaincrementarLocks)
 
 HashMapConcurrente hashM;
-hashM.incrementar("a");
-hashM.incrementar("aa");
-hashM.incrementar("aaa");
-hashM.incrementar("aaaa");
-hashM.incrementar("aaaaa");
-hashM.incrementar("b");
-hashM.incrementar("bb");
-hashM.incrementar("bbb");
-hashM.incrementar("bbbb");
-hashM.incrementar("bbbbb");
-
-bool flag = true; // Marca cuando empiezan a correr los incrementar
-
-std::vector<std::string> res;
-
-thread tClaves = thread(&HashMapConcurrente::clavesTestConLocks, &hashM, &res, &flag);
-
-while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
-//std::cout << "El main supero flag" << std::endl;
-//std::cout << "Esperando join no deberia aparecer instantaneamente" << std::endl;
-
-hashM.incrementar("c");
-LT_CHECK_EQ(flag,true); // Claves al final devuelve el flag a true
-                        // Ya termino claves
-                        // Si fuera false querria decir que el primer incrementar logro correr
-hashM.incrementar("cc");
-hashM.incrementar("ccc");
-hashM.incrementar("cccc");
-hashM.incrementar("ccccc");
-hashM.incrementar("d");
-hashM.incrementar("dd");
-hashM.incrementar("ddd");
-hashM.incrementar("dddd");
-hashM.incrementar("ddddd");
-
-//std::cout << "Esperando join" << std::endl;
-// No deberia aparecer instantaneamente porque los incrementar se bloquearon
-tClaves.join();
-//std::cout << "Joined" << std::endl;
-
-LT_CHECK_EQ(10, res.size());
-
-LT_END_TEST(ClavesBloqueaIncrementar)
-
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesSinLocksTieneRaceCondition)
-
-HashMapConcurrente hashM;
-hashM.incrementar("a");
-hashM.incrementar("aa");
-hashM.incrementar("aaa");
-hashM.incrementar("aaaa");
-hashM.incrementar("aaaaa");
-hashM.incrementar("b");
-hashM.incrementar("bb");
-hashM.incrementar("bbb");
-hashM.incrementar("bbbb");
-hashM.incrementar("bbbbb");
 bool flag = true;
-std::vector<std::string> res;
-//std::cout << "Inicialize cosas" << std::endl;
-
-thread tClaves = thread(&HashMapConcurrente::clavesTestSinLocks, &hashM, &res, &flag);
-
-while (flag){}
-//std::cout << "El main supero flag" << std::endl;
-
-hashM.incrementar("c");
-hashM.incrementar("cc");
-hashM.incrementar("ccc");
-hashM.incrementar("cccc");
-hashM.incrementar("ccccc");
-hashM.incrementar("d");
-hashM.incrementar("dd");
-hashM.incrementar("ddd");
-hashM.incrementar("dddd");
-hashM.incrementar("ddddd");
-
-//std::cout << "Esperando join" << std::endl;
-tClaves.join();
-//std::cout << "Joined" << std::endl;
-
-LT_CHECK_NEQ(10, res.size());
-
-LT_END_TEST(ClavesSinLocksTieneRaceCondition)
-
-
-
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesYMaximoNoSeBloquean)
-
-HashMapConcurrente hashM2;
-
-hashM2.incrementar("a");
-hashM2.incrementar("aa");
-hashM2.incrementar("aaa");
-hashM2.incrementar("aaaa");
-hashM2.incrementar("aaaaa");
-hashM2.incrementar("b");
-hashM2.incrementar("bb");
-hashM2.incrementar("bbb");
-hashM2.incrementar("bbbb");
-hashM2.incrementar("bbbbb");
-hashM2.incrementar("bbbbb");
-bool flag2 = true;
-std::vector<std::string> res2;
-
-thread tClaves2 = thread(&HashMapConcurrente::clavesTestConLocks, &hashM2, &res2, &flag2);
-while(flag2){}
-//std::cout << "El main supero flag 2" << std::endl;
-
-unsigned int max2 = hashM2.maximo().second;
-LT_CHECK_EQ(flag2,false);
-LT_CHECK_EQ(max2, 2);
-
-//std::cout << "Esperando join" << std::endl;
-tClaves2.join();
-//std::cout << "Joined" << std::endl;
-
-LT_CHECK_EQ(flag2, true);
-
-max2 = 0;
-
-std::vector<std::string> res3;
-
-thread tMaximo2 = thread(&HashMapConcurrente::maximoTest, &hashM2, &flag2);
-while(flag2){}
-//std::cout << "El main supero flag2 por segunda vez" << std::endl;
-
-res3 = hashM2.claves();
-LT_CHECK_EQ(flag2, false);
-LT_CHECK_EQ(res3.size(), 10);
-
-//std::cout << "Esperando join" << std::endl;
-tMaximo2.join();
-//std::cout << "Joined" << std::endl;
-
-LT_CHECK_EQ(flag2, true);
-
-
-LT_END_TEST(ClavesYMaximoNoSeBloquean)
-
-
-
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, Claves2NoBloqueaIncrementar)
-
-HashMapConcurrente hashM3;
-hashM3.incrementar2("a");
-hashM3.incrementar2("aa");
-hashM3.incrementar2("aaa");
-hashM3.incrementar2("aaaa");
-hashM3.incrementar2("aaaaa");
-hashM3.incrementar2("b");
-hashM3.incrementar2("bb");
-hashM3.incrementar2("bbb");
-hashM3.incrementar2("bbbb");
-hashM3.incrementar2("bbbbb");
-
-bool flag = true; // Marca cuando empiezan a correr los incrementar
-
-std::vector<std::string> res;
-
-thread tClaves = thread(&HashMapConcurrente::clavesTest2, &hashM3, &res, &flag);
-
-while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
-//std::cout << "El main supero flag" << std::endl;
-//std::cout << "Esperando join no deberia aparecer instantaneamente" << std::endl;
-
-hashM3.incrementar2("c");
-hashM3.incrementar2("cc");
-hashM3.incrementar2("ccc");
-hashM3.incrementar2("cccc");
-hashM3.incrementar2("ccccc");
-hashM3.incrementar2("d");
-hashM3.incrementar2("dd");
-hashM3.incrementar2("ddd");
-hashM3.incrementar2("dddd");
-hashM3.incrementar2("ddddd");
-
-//std::cout << "Esperando join" << std::endl;
-LT_CHECK_EQ(flag, false);
-
-tClaves.join();
-//std::cout << "Joined" << std::endl;
-
-LT_CHECK_EQ(10, res.size());
-
-LT_END_TEST(Claves2NoBloqueaIncrementar)
-
-
-
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorBloqueaIncrementar)
-
-HashMapConcurrente hashM4;
-bool flag4 = true;
 std::string clave = "clave";
 unsigned int res;
 
 // El false es para decirle que levante el flag despues de proteger la variable con el mutex
-// Deberia bloquear a incrementar
-thread tValor = thread(&HashMapConcurrente::valorTest, &hashM4, clave, &res, &flag4, false);
+// Deberia bloquear a incrementarLocks
+thread tValor = thread(&HashMapConcurrente::valorTest, &hashM, clave, &res, &flag, false);
 // No se mete al while, libera la barrera al toque y su resultado va a ser 0
 
-while(flag4){}
-//std::cout << "El main supero flag4" << std::endl;
+while(flag){}
 
-hashM4.incrementar(clave);
-LT_CHECK_EQ(flag4,false); // Valor esta durmiendo
+hashM.incrementarLocks(clave);
+LT_CHECK_EQ(flag,false); // Valor esta durmiendo, incrementarLocks debio poder movers porque esta vacio el hashmap
 tValor.join();
-LT_CHECK_EQ(flag4,true); // Ya termino valor
+LT_CHECK_EQ(flag,true); // Ya termino valor
 
 unsigned int res2;
 
-thread tValor2 = thread(&HashMapConcurrente::valorTest, &hashM4, clave, &res2, &flag4, false);
+// el false hace que se quede trabado despues de reclamar el mutex, cuando va conseguir el valor de la clave
+thread tValor2 = thread(&HashMapConcurrente::valorTest, &hashM, clave, &res2, &flag, false);
 
-while(flag4){}
-//std::cout << "El main supero flag4 por segunda vez" << std::endl;
+while(flag){}
 
-hashM4.incrementar(clave);
-LT_CHECK_EQ(flag4,true); // Si corrio el primer incrementar, tuvo que haber terminado valor
-hashM4.incrementar(clave);
+hashM.incrementarLocks(clave);
+LT_CHECK_EQ(flag,true); // Si corrio el incrementarLocks de arriba, tuvo que haber terminado valor
+hashM.incrementarLocks(clave);
 
 tValor2.join();
 
-LT_CHECK_EQ(res2,1); // No deberian haber corrido los incrementar en el medio
+LT_CHECK_EQ(res2,1); // No deberian haber corrido los incrementarLocks en el medio
 
-LT_CHECK_EQ(hashM4.valor(clave),3);
+LT_CHECK_EQ(hashM.valor(clave),3);
 
 std::string clave2 = "claveclave";
 unsigned int res3;
 
 // El true es para que se quede dormido despues de avanzar el iterador
-// Asi incrementar puede agregar una palabra nueva durante la ejecucion de valor
-thread tValor3 = thread(&HashMapConcurrente::valorTest, &hashM4, clave2, &res3, &flag4, true);
+// Asi incrementarLocks puede agregar una palabra nueva durante la ejecucion de valor
+thread tValor3 = thread(&HashMapConcurrente::valorTest, &hashM, clave2, &res3, &flag, true);
 
-while(flag4){}
-//std::cout << "El main supero flag 4 por tercera vez" << std::endl;
+while(flag){}
 
-hashM4.incrementar(clave2);
-LT_CHECK_EQ(flag4,false); // Sigue corriendo valor
+hashM.incrementarLocks(clave2);
+LT_CHECK_EQ(flag,false); // Sigue corriendo valor
 
 tValor3.join();
 
 LT_CHECK_EQ(res3,0);
 
-LT_CHECK_EQ(hashM4.valor(clave2),1);
+LT_CHECK_EQ(hashM.valor(clave2),1);
 
-LT_END_TEST(ValorBloqueaIncrementar)
+LT_END_TEST(ValorBloqueaincrementarLocks)
 
+// // // // // // // // // // // // // // //
 
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorInicioBloqueaincrementarLocks)
 
-LT_BEGIN_TEST(ConcurrenciaEjercicio2, Valor2BloqueaIncrementar)
+HashMapConcurrente hashM;
 
-HashMapConcurrente hashM5;
-
-bool flag5 = true;
+bool flag = true;
 unsigned int res;
 
 std:string clave = "clave";
 
-hashM5.incrementar(clave);
+hashM.incrementarLocks(clave);
 
-thread tValor2 = thread(&HashMapConcurrente::valorTest2, &hashM5, clave, &res, &flag5);
+thread tValor2 = thread(&HashMapConcurrente::valorInicioTest, &hashM, clave, &res, &flag);
 
-while(flag5){}
-//std::cout << "El main supero flag 5" << std::endl;
+while(flag){}
 
-hashM5.incrementar(clave);
-LT_CHECK_EQ(flag5,true); // Valor2 ya termino
-hashM5.incrementar(clave);
+hashM.incrementarLocks(clave);
+LT_CHECK_EQ(flag,true); // Valor2 ya termino
+hashM.incrementarLocks(clave);
 
 tValor2.join();
 
 LT_CHECK_EQ(res,1);
-LT_CHECK_EQ(hashM5.valor(clave),3);
+LT_CHECK_EQ(hashM.valor(clave),3);
 
-LT_END_TEST(Valor2BloqueaIncrementar)
+LT_END_TEST(ValorInicioBloqueaincrementarLocks)
 
-// Tests Ejercicio 2*/
+// // // // // // // // // // // // // // //
+
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesLocksBloqueaincrementarLocks)
+
+HashMapConcurrente hashM;
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+
+bool flag = true; // Marca cuando empiezan a correr los incrementarLocks
+
+std::vector<std::string> res;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestConLocks, &hashM, &res, &flag);
+
+while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
+
+hashM.incrementarLocks("c");
+LT_CHECK_EQ(flag,true); // Claves al final devuelve el flag a true
+                        // Ya termino claves
+                        // Si fuera false querria decir que el primer incrementarLocks logro correr
+hashM.incrementarLocks("cc");
+hashM.incrementarLocks("ccc");
+hashM.incrementarLocks("cccc");
+hashM.incrementarLocks("ccccc");
+hashM.incrementarLocks("d");
+hashM.incrementarLocks("dd");
+hashM.incrementarLocks("ddd");
+hashM.incrementarLocks("dddd");
+hashM.incrementarLocks("ddddd");
+
+// No deberia aparecer instantaneamente porque los incrementarLocks se bloquearon
+tClavesLocks.join();
+
+LT_CHECK_EQ(10, res.size());
+
+LT_END_TEST(ClavesLocksBloqueaincrementarLocks)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesLocksSinLocksTieneRaceCondition)
+
+HashMapConcurrente hashM;
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+bool flag = true;
+std::vector<std::string> res;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestSinLocks, &hashM, &res, &flag);
+
+while (flag){}
+
+hashM.incrementarLocks("c");
+hashM.incrementarLocks("cc");
+hashM.incrementarLocks("ccc");
+hashM.incrementarLocks("cccc");
+hashM.incrementarLocks("ccccc");
+hashM.incrementarLocks("d");
+hashM.incrementarLocks("dd");
+hashM.incrementarLocks("ddd");
+hashM.incrementarLocks("dddd");
+hashM.incrementarLocks("ddddd");
+
+tClavesLocks.join();
+
+LT_CHECK_NEQ(10, res.size());
+
+LT_END_TEST(ClavesLocksSinLocksTieneRaceCondition)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, MaximoBloqueaAincrementarLocks)
+
+HashMapConcurrente hashM;
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("b");
+
+bool flag = true; // Marca cuando empiezan a correr los incrementarLocks
+
+hashMapPair res;
+
+thread tMaximo = thread(&HashMapConcurrente::maximoTest, &hashM, &res, &flag);
+
+while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+LT_CHECK_EQ(flag,true); // Claves al final devuelve el flag a true
+                        // Ya termino claves
+                        // Si fuera false querria decir que el primer incrementarLocks logro correr
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+
+// No deberia aparecer instantaneamente porque los incrementarLocks se bloquearon
+tMaximo.join();
+
+LT_CHECK_EQ(2, res.second);
+LT_CHECK_EQ("b", res.first);
+
+LT_END_TEST(MaximoBloqueaAincrementarLocks)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, MaximoParaleloBloqueaAincrementarLocks)
+
+HashMapConcurrente hashM;
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("b");
+
+bool flag = true; // Marca cuando empiezan a correr los incrementarLocks
+
+hashMapPair res;
+
+// maximoParaleloTest tiene se duerme por 2 segundos en el bucket de la "b"
+thread tMaximoP = thread(&HashMapConcurrente::maximoParaleloTest, &hashM, &res, 2, &flag);
+
+while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
+
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+LT_CHECK_EQ(flag,false); // libero el primer bucket pero todavia no termino
+
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("b");
+LT_CHECK_EQ(flag,true); // MaximoP deberia haber terminado porque "b" era el ultimo bucket
+
+
+// No deberia aparecer instantaneamente porque los incrementarLocks se bloquearon
+tMaximoP.join();
+
+LT_CHECK_EQ(2, res.second);
+LT_CHECK_EQ("b", res.first);
+
+LT_END_TEST(MaximoParaleloBloqueaAincrementarLocks)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesNoBloqueaincrementarLocks)
+
+HashMapConcurrente hashM;
+hashM.incrementar("a");
+hashM.incrementar("aa");
+hashM.incrementar("aaa");
+hashM.incrementar("aaaa");
+hashM.incrementar("aaaaa");
+hashM.incrementar("b");
+hashM.incrementar("bb");
+hashM.incrementar("bbb");
+hashM.incrementar("bbbb");
+hashM.incrementar("bbbbb");
+
+bool flag = true; // Marca cuando empiezan a correr los incrementarLocks
+
+std::vector<std::string> res;
+std::vector<std::string> res2;
+
+thread tClaves = thread(&HashMapConcurrente::clavesTest, &hashM, &res, &flag);
+
+while (flag){} // Hacemos busy waiting, se libera cuando claves logra tomar los semaforos
+
+hashM.incrementar("c");
+hashM.incrementar("cc");
+hashM.incrementar("ccc");
+hashM.incrementar("cccc");
+hashM.incrementar("ccccc");
+LT_CHECK_EQ(flag, false);
+bool flag2 = true;
+thread tClaves2 = thread(&HashMapConcurrente::clavesTest, &hashM, &res2, &flag2);
+while(flag2){}
+hashM.incrementar("d");
+hashM.incrementar("dd");
+hashM.incrementar("ddd");
+hashM.incrementar("dddd");
+hashM.incrementar("ddddd");
+
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(flag2, false);
+// Todavia no termino ningun claves, estan corriendo en paralelo
+
+tClaves.join();
+tClaves2.join();
+
+LT_CHECK_EQ(10, res.size());
+LT_CHECK_EQ(15, res2.size());
+
+LT_END_TEST(ClavesNoBloqueaincrementarLocks)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorYMaximoNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+
+bool flag = true;
+unsigned int resVal;
+
+thread tValor = thread(&HashMapConcurrente::valorTest, &hashM, "a", &resVal, &flag, false);
+
+while(flag){}
+
+hashMapPair resMax = hashM.maximo();
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(resMax.first, "a");
+LT_CHECK_EQ(resMax.second, 3);
+
+tValor.join();
+
+LT_CHECK_EQ(resVal,3);
+LT_CHECK_EQ(flag, true);
+
+resVal = 0;
+hashMapPair resMax2;
+
+thread tMaximoP = thread(&HashMapConcurrente::maximoTest, &hashM, &resMax2, &flag);
+while(flag){}
+
+resVal = hashM.valor("a");
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(resVal, 3);
+
+tMaximoP.join();
+
+LT_CHECK_EQ("a",resMax2.first);
+LT_CHECK_EQ(3,resMax2.second);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorYMaximoNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorInicioYMaximoNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+
+bool flag = true;
+unsigned int resVal;
+
+thread tValor = thread(&HashMapConcurrente::valorInicioTest, &hashM, "a", &resVal, &flag);
+
+while(flag){}
+
+hashMapPair resMax = hashM.maximo();
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(resMax.first, "a");
+LT_CHECK_EQ(resMax.second, 3);
+
+tValor.join();
+
+LT_CHECK_EQ(resVal,3);
+LT_CHECK_EQ(flag, true);
+
+resVal = 0;
+hashMapPair resMax2;
+
+thread tMaximoP = thread(&HashMapConcurrente::maximoTest, &hashM, &resMax2, &flag);
+while(flag){}
+
+resVal = hashM.valorInicio("a");
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(resVal, 3);
+
+tMaximoP.join();
+
+LT_CHECK_EQ("a",resMax2.first);
+LT_CHECK_EQ(3,resMax2.second);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorInicioYMaximoNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorYMaximoParaleloNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+
+bool flag = true;
+unsigned int resVal;
+
+thread tValor = thread(&HashMapConcurrente::valorTest, &hashM, "a", &resVal, &flag, false);
+
+while(flag){}
+
+hashMapPair resMax = hashM.maximoParalelo(2);
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(resMax.first, "a");
+LT_CHECK_EQ(resMax.second, 3);
+
+tValor.join();
+
+LT_CHECK_EQ(resVal,3);
+LT_CHECK_EQ(flag, true);
+
+resVal = 0;
+hashMapPair resMax2;
+
+thread tMaximoP = thread(&HashMapConcurrente::maximoParaleloTest, &hashM, &resMax2, 2, &flag);
+while(flag){}
+
+resVal = hashM.valor("a");
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(resVal, 3);
+
+tMaximoP.join();
+
+LT_CHECK_EQ("a",resMax2.first);
+LT_CHECK_EQ(3,resMax2.second);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorYMaximoParaleloNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorInicioYMaximoParaleloNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("a");
+
+bool flag = true;
+unsigned int resVal;
+
+thread tValor = thread(&HashMapConcurrente::valorInicioTest, &hashM, "a", &resVal, &flag);
+
+while(flag){}
+
+hashMapPair resMax = hashM.maximoParalelo(2);
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(resMax.first, "a");
+LT_CHECK_EQ(resMax.second, 3);
+
+tValor.join();
+
+LT_CHECK_EQ(resVal,3);
+LT_CHECK_EQ(flag, true);
+
+resVal = 0;
+hashMapPair resMax2;
+
+thread tMaximoP = thread(&HashMapConcurrente::maximoParaleloTest, &hashM, &resMax2, 2, &flag);
+while(flag){}
+
+resVal = hashM.valorInicio("a");
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(resVal, 3);
+
+tMaximoP.join();
+
+LT_CHECK_EQ("a",resMax2.first);
+LT_CHECK_EQ(3,resMax2.second);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorInicioYMaximoParaleloNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorYClavesLocksNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+hashM.incrementarLocks("bbbbb");
+bool flag = true;
+std::vector<std::string> res2;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestConLocks, &hashM, &res2, &flag);
+while(flag){}
+
+unsigned int valor = hashM.valor("bbbbb");
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(valor, 2);
+
+tClavesLocks.join();
+
+LT_CHECK_EQ(flag, true);
+
+valor = 0;
+
+std::vector<std::string> res3;
+
+thread tValor = thread(&HashMapConcurrente::valorTest, &hashM, "bbbbb", &valor, &flag, false);
+while(flag){}
+
+res3 = hashM.clavesLocks();
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(res3.size(), 10);
+
+tValor.join();
+
+LT_CHECK_EQ(2,valor);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorYClavesLocksNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ValorInicioYClavesLocksNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+hashM.incrementarLocks("bbbbb");
+bool flag = true;
+std::vector<std::string> res2;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestConLocks, &hashM, &res2, &flag);
+while(flag){}
+
+unsigned int valor = hashM.valorInicio("bbbbb");
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(valor, 2);
+
+tClavesLocks.join();
+
+LT_CHECK_EQ(flag, true);
+
+valor = 0;
+
+std::vector<std::string> res3;
+
+thread tValor = thread(&HashMapConcurrente::valorInicioTest, &hashM, "bbbbb", &valor, &flag);
+while(flag){}
+
+res3 = hashM.clavesLocks();
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(res3.size(), 10);
+
+tValor.join();
+
+LT_CHECK_EQ(2,valor);
+LT_CHECK_EQ(flag, true);
+
+LT_END_TEST(ValorInicioYClavesLocksNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesLocksYMaximoNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+hashM.incrementarLocks("bbbbb");
+bool flag = true;
+std::vector<std::string> res2;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestConLocks, &hashM, &res2, &flag);
+while(flag){}
+
+unsigned int max2 = hashM.maximo().second;
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(max2, 2);
+
+tClavesLocks.join();
+
+LT_CHECK_EQ(flag, true);
+
+max2 = 0;
+
+std::vector<std::string> res3;
+hashMapPair resMaximo;
+
+thread tMaximo2 = thread(&HashMapConcurrente::maximoTest, &hashM, &resMaximo, &flag);
+while(flag){}
+
+res3 = hashM.clavesLocks();
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(res3.size(), 10);
+
+tMaximo2.join();
+
+LT_CHECK_EQ("bbbbb",resMaximo.first);
+LT_CHECK_EQ(2,resMaximo.second);
+LT_CHECK_EQ(flag, true);
+
+
+LT_END_TEST(ClavesLocksYMaximoNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, ClavesLocksYMaximoParaleloNoSeBloquean)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+hashM.incrementarLocks("bbbbb");
+bool flag = true;
+std::vector<std::string> res2;
+
+thread tClavesLocks = thread(&HashMapConcurrente::clavesLocksTestConLocks, &hashM, &res2, &flag);
+while(flag){}
+
+unsigned int max2 = hashM.maximo().second;
+LT_CHECK_EQ(flag,false);
+LT_CHECK_EQ(max2, 2);
+
+tClavesLocks.join();
+
+LT_CHECK_EQ(flag, true);
+
+max2 = 0;
+
+std::vector<std::string> res3;
+hashMapPair resMaximo;
+
+thread tMaximoP = thread(&HashMapConcurrente::maximoParaleloTest, &hashM, &resMaximo, 2, &flag);
+while(flag){}
+
+res3 = hashM.clavesLocks();
+LT_CHECK_EQ(flag, false);
+LT_CHECK_EQ(res3.size(), 10);
+
+tMaximoP.join();
+
+LT_CHECK_EQ("bbbbb",resMaximo.first);
+LT_CHECK_EQ(2,resMaximo.second);
+LT_CHECK_EQ(flag, true);
+
+
+LT_END_TEST(ClavesLocksYMaximoParaleloNoSeBloquean)
+
+// // // // // // // // // // // // // // //
+
+LT_BEGIN_TEST(ConcurrenciaEjercicio2, MaximoParalelo1Thread)
+
+HashMapConcurrente hashM;
+
+hashM.incrementarLocks("a");
+hashM.incrementarLocks("aa");
+hashM.incrementarLocks("aaa");
+hashM.incrementarLocks("aaaa");
+hashM.incrementarLocks("aaaaa");
+hashM.incrementarLocks("b");
+hashM.incrementarLocks("bb");
+hashM.incrementarLocks("bbb");
+hashM.incrementarLocks("bbbb");
+hashM.incrementarLocks("bbbbb");
+hashM.incrementarLocks("bbbbb");
+
+hashMapPair res = hashM.maximoParalelo(1);
+LT_CHECK_EQ("bbbbb", res.first);
+LT_CHECK_EQ(2, res.second);
+res = hashM.maximoParalelo(0);
+LT_CHECK_EQ("bbbbb", res.first);
+LT_CHECK_EQ(2, res.second);
+res = hashM.maximoParalelo(30);
+LT_CHECK_EQ("bbbbb", res.first);
+LT_CHECK_EQ(2, res.second);
+
+LT_END_TEST(MaximoParalelo1Thread)
+
+// TESTS CATEDRA EJERCICIO 2
 
 LT_BEGIN_SUITE(TestsEjercicio2)
 
@@ -389,38 +854,47 @@ LT_END_SUITE(TestsEjercicio2)
 
 LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoEnHashMapVacio)
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 0);
+    LT_CHECK_EQ(hM.valorInicio("tiranosaurio"), 0);
 LT_END_TEST(ValorEsCorrectoEnHashMapVacio)
 
 LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoEnHashMapVacio)
     std::vector<std::string> actual = hM.claves();
+    std::vector<std::string> actualLocks = hM.clavesLocks();
     std::vector<std::string> expected = {};
     LT_CHECK_COLLECTIONS_EQ(actual.begin(), actual.end(), expected.begin());
+    LT_CHECK_COLLECTIONS_EQ(actualLocks.begin(), actualLocks.end(), expected.begin());
 LT_END_TEST(ClavesEsCorrectoEnHashMapVacio)
 
 LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasUnaInsercion)
     hM.incrementar("tiranosaurio");
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 1);
+    LT_CHECK_EQ(hM.valorInicio("tiranosaurio"), 1);
 LT_END_TEST(ValorEsCorrectoTrasUnaInsercion)
 
 LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasUnaInsercion)
     hM.incrementar("tiranosaurio");
     std::vector<std::string> actual = hM.claves();
+    std::vector<std::string> actualLocks = hM.clavesLocks();
     std::vector<std::string> expected = {"tiranosaurio"};
     LT_CHECK_COLLECTIONS_EQ(actual.begin(), actual.end(), expected.begin());
+    LT_CHECK_COLLECTIONS_EQ(actualLocks.begin(), actualLocks.end(), expected.begin());
 LT_END_TEST(ClavesEsCorrectoTrasUnaInsercion)
 
 LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasDosInsercionesMismaPalabra)
     hM.incrementar("tiranosaurio");
     hM.incrementar("tiranosaurio");
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 2);
+    LT_CHECK_EQ(hM.valorInicio("tiranosaurio"), 2);
 LT_END_TEST(ValorEsCorrectoTrasDosInsercionesMismaPalabra)
 
 LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasDosInsercionesMismaPalabra)
     hM.incrementar("tiranosaurio");
     hM.incrementar("tiranosaurio");
     std::vector<std::string> actual = hM.claves();
+    std::vector<std::string> actualLocks = hM.clavesLocks();
     std::vector<std::string> expected = {"tiranosaurio"};
     LT_CHECK_COLLECTIONS_EQ(actual.begin(), actual.end(), expected.begin());
+    LT_CHECK_COLLECTIONS_EQ(actualLocks.begin(), actualLocks.end(), expected.begin());
 LT_END_TEST(ClavesEsCorrectoTrasDosInsercionesMismaPalabra)
 
 LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasVariasInsercionesMismoBucket)
@@ -429,6 +903,8 @@ LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasVariasInsercionesMismoBucket)
     hM.incrementar("triceratops");
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 2);
     LT_CHECK_EQ(hM.valor("triceratops"), 1);
+    LT_CHECK_EQ(hM.valorInicio("tiranosaurio"), 2);
+    LT_CHECK_EQ(hM.valorInicio("triceratops"), 1);
 LT_END_TEST(ValorEsCorrectoTrasVariasInsercionesMismoBucket)
 
 LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasVariasInsercionesMismoBucket)
@@ -436,9 +912,12 @@ LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasVariasInsercionesMismoBucket)
     hM.incrementar("tiranosaurio");
     hM.incrementar("triceratops");
     std::vector<std::string> actual = hM.claves();
+    std::vector<std::string> actualLocks = hM.clavesLocks();
     LT_CHECK_EQ(actual.size(), 2);
     LT_CHECK(std::find(actual.begin(), actual.end(), "tiranosaurio") != actual.end());
+    LT_CHECK(std::find(actualLocks.begin(), actualLocks.end(), "tiranosaurio") != actualLocks.end());
     LT_CHECK(std::find(actual.begin(), actual.end(), "triceratops") != actual.end());
+    LT_CHECK(std::find(actualLocks.begin(), actualLocks.end(), "triceratops") != actualLocks.end());
 LT_END_TEST(ClavesEsCorrectoTrasVariasInsercionesMismoBucket)
 
 LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasVariasInsercionesDistintoBucket)
@@ -447,6 +926,8 @@ LT_BEGIN_TEST(TestsEjercicio2, ValorEsCorrectoTrasVariasInsercionesDistintoBucke
     hM.incrementar("tiranosaurio");
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 2);
     LT_CHECK_EQ(hM.valor("estegosaurio"), 1);
+    LT_CHECK_EQ(hM.valorInicio("tiranosaurio"), 2);
+    LT_CHECK_EQ(hM.valorInicio("estegosaurio"), 1);
 LT_END_TEST(ValorEsCorrectoTrasVariasInsercionesDistintoBucket)
 
 LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasVariasInsercionesDistintoBucket)
@@ -454,12 +935,15 @@ LT_BEGIN_TEST(TestsEjercicio2, ClavesEsCorrectoTrasVariasInsercionesDistintoBuck
     hM.incrementar("estegosaurio");
     hM.incrementar("tiranosaurio");
     std::vector<std::string> actual = hM.claves();
+    std::vector<std::string> actualLocks = hM.clavesLocks();
     LT_CHECK_EQ(actual.size(), 2);
     LT_CHECK(std::find(actual.begin(), actual.end(), "tiranosaurio") != actual.end());
     LT_CHECK(std::find(actual.begin(), actual.end(), "estegosaurio") != actual.end());
+    LT_CHECK(std::find(actualLocks.begin(), actualLocks.end(), "tiranosaurio") != actualLocks.end());
+    LT_CHECK(std::find(actualLocks.begin(), actualLocks.end(), "estegosaurio") != actualLocks.end());
 LT_END_TEST(ClavesEsCorrectoTrasVariasInsercionesDistintoBucket)
 
-// Tests Ejercicio 3
+// TESTS CATEDRA EJERCICIO 3
 
 LT_BEGIN_SUITE(TestsEjercicio3)
 
@@ -546,7 +1030,6 @@ LT_END_TEST(CargarMultiplesArchivosFuncionaUnThread)
 
 LT_BEGIN_TEST(TestsEjercicio4, CargarMultiplesArchivosFuncionaDosThreads)
     cargarMultiplesArchivos(hM, 2, {"data/test-1", "data/test-2", "data/test-3"});
-    // Habian seteado para que solo haya 1 thread...
     
     LT_CHECK_EQ(hM.valor("tiranosaurio"), 2);
     LT_CHECK_EQ(hM.valor("linux"), 3);
