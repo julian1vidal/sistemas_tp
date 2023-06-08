@@ -73,9 +73,81 @@ void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
     delete miHashMap;
 }
 
+void buscarValorFinal(HashMapConcurrente *hm, bool *flag, bool valor){
+    if (valor){
+        while(*flag){}
+        unsigned int val = hm->valorInicio("aaa");
+    }
+    else{
+        while(*flag){}
+        unsigned int val = hm->valor("aaa");
+    }
+}
+
+void experimentosValor(unsigned int cantPalabras,unsigned int cantValor){
+    auto total = std::chrono::high_resolution_clock::now();
+
+    HashMapConcurrente hashM;
+    hashM.incrementar("aaa");
+    for (unsigned int i = 0 ; i<cantPalabras ; i++){
+        std::string a = "a";
+        std::string palabra = generateRandomWord('a');
+        hashM.incrementar(a+palabra);
+    }
+    std::cout << "Termine de incrementar" << std::endl;
+    bool flag = true;
+
+    // Chequeo de tiempos sin incrementar en el medio
+
+
+    std::vector<std::thread> threadsValor(cantValor);
+    for (unsigned int i = 0 ; i<cantValor ; i++){
+        threadsValor[i] = std::thread(buscarValorFinal, &hashM, &flag, false);
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    sleep(2);
+    flag = false;
+
+    for (unsigned int i = 0 ; i<cantValor ; i++){
+        threadsValor[i].join();
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    flag = true;
+    std::cout << "Tiempo valor = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << " nanosegundos" << std::endl;
+
+    std::vector<std::thread> threadsValorInicio(cantValor);
+    for (unsigned int i = 0 ; i<cantValor ; i++){
+        threadsValorInicio[i] = std::thread(buscarValorFinal, &hashM, &flag, true);
+    }
+
+    auto start2 = std::chrono::high_resolution_clock::now();
+    sleep(2);
+    flag = false;
+
+    for (unsigned int i = 0 ; i<cantValor ; i++){
+        threadsValorInicio[i].join();
+    }
+    auto end2 = std::chrono::high_resolution_clock::now();
+
+    flag = true;
+    std::cout << "Tiempo valor Inicio = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end2-start2).count() << " nanosegundos" << std::endl;
+
+    std::cout << "La diferencia es de " << std::chrono::duration_cast<std::chrono::nanoseconds>(end2-start2).count()-std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << " nanosegundos" << std::endl;
+    std::cout << "El porcentaje de perdida es de " << 100*(std::chrono::duration_cast<std::chrono::nanoseconds>(end2-start2).count()-std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count())/std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << "%" << std::endl;
+
+    auto totalEnd = std::chrono::high_resolution_clock::now();
+
+    std::cout << "En total tarde " << std::chrono::duration_cast<std::chrono::nanoseconds>(totalEnd-total).count()/1000000000 << " segundos" << std::endl;
+}
+
 int main() {
-    maximoParaleloContraMaximoUnaLetra(500, 'z');
-    maximoParaleloContraMaximoTodasLasLetras(500);
+    std::cout << "Comienza" << std::endl << std::endl;
+    //maximoParaleloContraMaximoUnaLetra(50000, 'z');
+    //maximoParaleloContraMaximoTodasLasLetras(2500);
+    experimentosValor(100000, 50000); // 50000, 10000 me tardo 5 min
+
     return 0;
     
 }
