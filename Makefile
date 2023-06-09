@@ -24,6 +24,7 @@ test_juli: build $(BUILD_DIR)/$(TEST_JULI)
 
 test_tiempo: build $(BUILD_DIR)/$(TEST_TIEMPO)
 	$(BUILD_DIR)/$(TEST_TIEMPO)
+	python3 graph.py
 
 
 $(BUILD_DIR)/%.o: src/%.cpp
