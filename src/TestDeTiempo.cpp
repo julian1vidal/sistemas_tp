@@ -8,6 +8,11 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iomanip>
+#include <cmath>
+
+using namespace std;
 
 std::string generateRandomWord(char startLetter) {
     // Generador de números aleatorios (instancia única)
@@ -37,7 +42,7 @@ std::string generateRandomWord(char startLetter) {
 std::vector<char> letras = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
                        'o','p','q','r','s','t','u','v','w','x','y','z'};
 
-void maximoParaleloContraMaximoTodasLasLetras(int cantidad){
+pair<int,int> maximoParaleloContraMaximoTodasLasLetras(int cantidad){
     HashMapConcurrente* miHashMap = new HashMapConcurrente();
     for (int j=0; j<25; j++){
         for (int i = 0; i < cantidad; i++) {
@@ -48,15 +53,16 @@ void maximoParaleloContraMaximoTodasLasLetras(int cantidad){
     auto start = std::chrono::high_resolution_clock::now();
     hashMapPair maximo = (*miHashMap).maximoParalelo(26);
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Tiempo maximo paralelo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
+    int tiempo_maximo_paralelo = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
     start = std::chrono::high_resolution_clock::now();
     hashMapPair maximo2 = (*miHashMap).maximo();
     end = std::chrono::high_resolution_clock::now();
-    std::cout << "Tiempo maximo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
+    int tiempo_maximo = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count(); 
     delete miHashMap;
+    return make_pair(tiempo_maximo,tiempo_maximo_paralelo);
 }
 
-void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
+pair<int,int> maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
     HashMapConcurrente* miHashMap = new HashMapConcurrente();
     for (int i = 0; i < cantidad; i++) {
         std::string palabra = generateRandomWord(letra);
@@ -65,12 +71,13 @@ void maximoParaleloContraMaximoUnaLetra(int cantidad, char letra){
     auto start = std::chrono::high_resolution_clock::now();
     hashMapPair maximo = (*miHashMap).maximoParalelo(26);
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Tiempo maximo paralelo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
+    int tiempoMaximoParalelo = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
     start = std::chrono::high_resolution_clock::now();
     hashMapPair maximo2 = (*miHashMap).maximo();
     end = std::chrono::high_resolution_clock::now();
-    std::cout << "Tiempo maximo: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << std::endl;
+    int tiempoMaximo = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
     delete miHashMap;
+    return make_pair(tiempoMaximo,tiempoMaximoParalelo);
 }
 
 void buscarValorFinal(HashMapConcurrente *hm, bool *flag, bool valor){
@@ -142,12 +149,150 @@ void experimentosValor(unsigned int cantPalabras,unsigned int cantValor){
     std::cout << "En total tarde " << std::chrono::duration_cast<std::chrono::nanoseconds>(totalEnd-total).count()/1000000000 << " segundos" << std::endl;
 }
 
-int main() {
-    std::cout << "Comienza" << std::endl << std::endl;
-    //maximoParaleloContraMaximoUnaLetra(50000, 'z');
-    //maximoParaleloContraMaximoTodasLasLetras(2500);
-    experimentosValor(100000, 50000); // 50000, 10000 me tardo 5 min
+void writeToFile(std::vector<pair<double,double>> vector, std::string nombreArchivo) {
+    std::ofstream file(nombreArchivo);
+     if (!file) {
+          throw std::runtime_error("Error al abrir el archivo");
+     }
+     for (int i = 0; i < vector.size(); i++) {
+         file << vector[i].first << " - " << vector[i].second << " -- ";
+     }
+     file.close();
+}
 
+void tiemposTodasLasLetras(){
+    double num = 16;
+    pair<double,double> valores;
+    vector<pair<double,double>> valoresMaximo = {};
+    vector<pair<double,double>> valoresMaximoParalelo = {};
+    for (double i = 0; i < 10; i++) {
+        num = num * 2;
+        vector<double> suma_maximo = {};
+        vector<double> suma_maximo_paralelo = {};
+        for(double j = 0; j < 10; j++){
+            valores = maximoParaleloContraMaximoTodasLasLetras(num);
+            suma_maximo.push_back(valores.first);
+            suma_maximo_paralelo.push_back(valores.second);
+        }
+        double promedio_maximo = 0;
+        double promedio_maximo_paralelo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            promedio_maximo += suma_maximo[k];
+            promedio_maximo_paralelo += suma_maximo_paralelo[k];
+        }
+        promedio_maximo = promedio_maximo / suma_maximo.size();
+        promedio_maximo_paralelo = promedio_maximo_paralelo / suma_maximo_paralelo.size();
+        double std_maximo = 0;
+        double std_maximo_paralelo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            // cout << std_maximo << endl;
+            cout << abs(suma_maximo_paralelo[k] - promedio_maximo_paralelo) << endl;
+            cout <<"hola"  << endl;
+            std_maximo += abs(suma_maximo[k] - promedio_maximo)*abs(suma_maximo[k] - promedio_maximo);
+            
+            std_maximo_paralelo += abs(suma_maximo_paralelo[k] - promedio_maximo_paralelo)*abs(suma_maximo_paralelo[k] - promedio_maximo_paralelo);
+        }
+        // cout << "std_maximo: " << std_maximo << endl;
+        std_maximo = sqrt(std_maximo / suma_maximo.size());
+        cout << "std_maximo: " << std_maximo_paralelo << endl;
+        std_maximo_paralelo = sqrt(std_maximo_paralelo / suma_maximo_paralelo.size());
+        cout << "std_maximo: " << std_maximo_paralelo << endl;
+        pair<double,double> maximo = make_pair(promedio_maximo, std_maximo);
+        pair<double,double> maximoParalelo = make_pair(promedio_maximo_paralelo, std_maximo_paralelo);
+        valoresMaximo.push_back(maximo);
+        valoresMaximoParalelo.push_back(maximoParalelo);
+        cout << "Termine con " << i << endl;
+    }
+    writeToFile(valoresMaximo, "maximo.txt");
+    writeToFile(valoresMaximoParalelo, "maximoParalelo.txt");
+}
+
+void tiemposUnaLetra(){
+    double num = 16;
+    pair<double,double> valores;
+    vector<pair<double,double>> valoresMaximo = {};
+    vector<pair<double,double>> valoresMaximoParalelo = {};
+    for (double i = 0; i < 10; i++) {
+        num = num * 2;
+        vector<double> suma_maximo = {};
+        vector<double> suma_maximo_paralelo = {};
+        for(double j = 0; j < 10; j++){
+            valores = maximoParaleloContraMaximoUnaLetra(num, 'a');
+            suma_maximo.push_back(valores.first);
+            suma_maximo_paralelo.push_back(valores.second);
+        }
+        double promedio_maximo = 0;
+        double promedio_maximo_paralelo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            promedio_maximo += suma_maximo[k];
+            promedio_maximo_paralelo += suma_maximo_paralelo[k];
+        }
+        promedio_maximo = promedio_maximo / suma_maximo.size();
+        promedio_maximo_paralelo = promedio_maximo_paralelo / suma_maximo_paralelo.size();
+        double std_maximo = 0;
+        double std_maximo_paralelo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            std_maximo += abs(suma_maximo[k] - promedio_maximo)*abs(suma_maximo[k] - promedio_maximo);
+            std_maximo_paralelo += abs(suma_maximo_paralelo[k] - promedio_maximo_paralelo)*abs(suma_maximo_paralelo[k] - promedio_maximo_paralelo);
+        }
+        cout << "std_maximo: " << std_maximo << endl;
+        std_maximo = sqrt(std_maximo / suma_maximo.size());
+        cout << "std_maximo: " << std_maximo << endl;
+        std_maximo_paralelo = sqrt(std_maximo_paralelo / suma_maximo_paralelo.size());
+        pair<double,double> maximo = make_pair(promedio_maximo, std_maximo);
+        pair<double,double> maximoParalelo = make_pair(promedio_maximo_paralelo, std_maximo_paralelo);
+        valoresMaximo.push_back(maximo);
+        valoresMaximoParalelo.push_back(maximoParalelo);
+        cout << "Termine con " << i << endl;
+    }
+    writeToFile(valoresMaximo, "maximo.txt");
+    writeToFile(valoresMaximoParalelo, "maximoParalelo.txt");
+}
+
+void tiemposMaximoConThreads(){
+    HashMapConcurrente* miHashMap = new HashMapConcurrente();
+    for (double j=0; j<25; j++){
+        for (double i = 0; i < 100000; i++) {
+            std::string palabra = generateRandomWord(letras[j]);
+            (*miHashMap).incrementar(palabra);
+        }
+    }
+    vector<pair<double,double>> valoresMaximo = {};
+    for (double i = 1; i <= 26; i++) {
+        vector<double> suma_maximo = {};
+
+        for(double j=0; j<10;j++){
+            auto start = std::chrono::high_resolution_clock::now();
+            (*miHashMap).maximoParalelo(i);
+            auto end = std::chrono::high_resolution_clock::now();
+            suma_maximo.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+        }
+        double promedio_maximo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            promedio_maximo += suma_maximo[k];
+        }
+        promedio_maximo = promedio_maximo / suma_maximo.size();
+        double std_maximo = 0;
+        for (double k = 0; k < suma_maximo.size(); k++) {
+            std_maximo += abs(suma_maximo[k] - promedio_maximo)*abs(suma_maximo[k] - promedio_maximo);
+        }
+        std_maximo = sqrt(std_maximo / suma_maximo.size());
+        pair<double,double> maximo = make_pair(promedio_maximo, std_maximo);
+        valoresMaximo.push_back(maximo);
+        cout << "Termine con " << i << endl;
+    }
+    writeToFile(valoresMaximo, "maximoThreads.txt");
+
+
+    delete miHashMap;
+}
+
+int main() {
+    
+
+    tiemposTodasLasLetras();
+    //tiemposUnaLetra();
+    //tiemposMaximoConThreads();
     return 0;
     
 }
